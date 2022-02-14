@@ -11,8 +11,7 @@ async function main() {
   await writeMnemonics(password);
   const mnemonics = await readMnemonics(password);
 
-  mnemonics.slice(0, 8).forEach((seed) => kavaStaff(seed, 0.5)); // 0.5
-  mnemonics.slice(-2).forEach((seed) => kavaStaff(seed, 0.4)); // 0.4
+  mnemonics.forEach((seed) => kavaStaff(seed, 0.45));
 }
 
 main();

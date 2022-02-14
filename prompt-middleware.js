@@ -7,9 +7,12 @@ import {
   accessAsync,
 } from "./utils.js";
 import prompt from "prompt";
+import { initClient } from "./kava-middleware.js";
 
-const mnemoFilePath = "./settings.txt",
-  yesNoString = "y/n";
+const configFilePath = "./config.json";
+const seedsFilePath = "./seeds.txt";
+const mnemoFilePath = "./settings.txt";
+const yesNoString = "y/n";
 
 async function getPassword() {
   l("enter password");
@@ -40,22 +43,42 @@ async function writeMnemonics(password) {
 }
 
 // write seed and change config
-async function writeMnemonics2(password) {
-  let isMnemonicAdding = await askForMnemoAdding();
+async function updateSeedsAndConfig(password) {
+  let isSeedAdding = true;
 
-  while (isMnemonicAdding) {
-    let { mnemonic } = await prompt.get(["mnemonic"]);
+  while (isSeedAdding) {
+    // create new record
+    let {
+      seed = "",
+      validator = "",
+      claimOption = 0,
+    } = await prompt.get(["seed", "validator", "claimOption"]);
 
-    let mnemonics = "";
-    if (await accessAsync(mnemoFilePath)) {
-      mnemonics = await readFileAsync(mnemoFilePath, {
+    // update seeds file
+    let seeds = "";
+    if (await accessAsync(seedsFilePath)) {
+      seeds = await readFileAsync(seedsFilePath, {
         encoding: "utf8",
       });
     }
-    mnemonics += enc(mnemonic, password) + "\n";
-    await writeFileAsync(mnemoFilePath, mnemonics);
+    seeds += enc(seed, password) + "\n";
+    writeFileAsync(seedsFilePath, seeds);
 
-    isMnemonicAdding = await askForMnemoAdding();
+    // update config file
+    let config = { wallets: [] };
+    if (await accessAsync(configFilePath)) {
+      config = JSON.parse(
+        await readFileAsync(configFilePath, {
+          encoding: "utf8",
+        })
+      );
+    }
+    const delegator = (await initClient(seed)).wallet.address;
+    const coin = "kava";
+    config.wallets.push({ delegator, validator, claimOption, coin });
+    writeFileAsync(configFilePath, JSON.stringify(config));
+
+    isSeedAdding = await askForMnemoAdding();
   }
 }
 
@@ -84,4 +107,4 @@ async function readMnemonics(password) {
   return mnemonics;
 }
 
-export { getPassword, writeMnemonics, readMnemonics };
+export { getPassword, writeMnemonics, readMnemonics, updateSeedsAndConfig };
