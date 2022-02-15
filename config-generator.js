@@ -1,17 +1,16 @@
 import { l } from "./utils.js";
 import {
   getPassword,
-  writeMnemonics,
   readMnemonics,
+  seedsToConfig,
 } from "./prompt-middleware.js";
-import { kavaStaff } from "./kava-middleware.js";
 
+// for future tests only
 async function main() {
   const password = await getPassword();
-  await writeMnemonics(password);
   const mnemonics = await readMnemonics(password);
 
-  mnemonics.forEach((seed) => kavaStaff(seed, 0.6));
+  seedsToConfig(mnemonics);
 }
 
 main();

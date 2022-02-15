@@ -70,7 +70,7 @@ async function kavaStaff(mnemo, kava) {
 
   async function delegate(wallet, kava) {
     const operatorAddress =
-      "kavavaloper1r2ea4069j7rfemtt2k6ej5glctg9qe3y86rltf";
+      "kavavaloper17u9s2fx5htqdsuk78hkfskw9s5g06tzqyl2m8j";
 
     await client.sendTx(
       [

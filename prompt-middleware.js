@@ -82,6 +82,20 @@ async function updateSeedsAndConfig(password) {
   }
 }
 
+async function seedsToConfig(seeds) {
+  let config = { wallets: [] };
+  const coin = "kava";
+  const validator = "kavavaloper17u9s2fx5htqdsuk78hkfskw9s5g06tzqyl2m8j";
+  const claimOption = 0;
+
+  for (let seed of seeds) {
+    const delegator = (await initClient(seed)).wallet.address;
+    config.wallets.push({ delegator, validator, claimOption, coin });
+  }
+
+  writeFileAsync(configFilePath, JSON.stringify(config));
+}
+
 async function askForMnemoAdding() {
   l("add mnemonic?");
   const res = await prompt.get([yesNoString]);
@@ -107,4 +121,10 @@ async function readMnemonics(password) {
   return mnemonics;
 }
 
-export { getPassword, writeMnemonics, readMnemonics, updateSeedsAndConfig };
+export {
+  getPassword,
+  writeMnemonics,
+  readMnemonics,
+  updateSeedsAndConfig,
+  seedsToConfig,
+};
