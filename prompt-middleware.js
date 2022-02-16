@@ -121,10 +121,19 @@ async function readMnemonics(password) {
   return mnemonics;
 }
 
+async function loadConfig() {
+  const text = await readFileAsync(configFilePath, {
+    encoding: "utf8",
+  });
+
+  return JSON.parse(text);
+}
+
 export {
   getPassword,
   writeMnemonics,
   readMnemonics,
   updateSeedsAndConfig,
   seedsToConfig,
+  loadConfig,
 };
