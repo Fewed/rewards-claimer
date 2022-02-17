@@ -7,16 +7,3 @@ async function main() {
 }
 
 main();
-
-/*
-{
-  wallets: [
-    {
-      delegator: "",
-      validator: "",
-      claimOption: "",
-      coin: ""
-    }
-  ]
-}
-*/

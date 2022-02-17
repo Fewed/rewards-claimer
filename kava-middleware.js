@@ -12,91 +12,6 @@ async function initClient(mnemo) {
   return client;
 }
 
-async function kavaStaff(mnemo, kava) {
-  const fee = {
-    gas: "1000000",
-    amount: [
-      {
-        denom: "ukava",
-        amount: "1000",
-      },
-    ],
-  };
-
-  const client = await initClient(mnemo);
-  const wallet = client.wallet.address;
-
-  async function claim(wallet) {
-    await client.sendTx(
-      [
-        {
-          type: "incentive/MsgClaimHardReward",
-          value: {
-            sender: wallet,
-            denoms_to_claim: [
-              {
-                denom: "hard",
-                multiplier_name: "large",
-              },
-              {
-                denom: "ukava",
-                multiplier_name: "large",
-              },
-            ],
-          },
-        },
-        {
-          type: "incentive/MsgClaimDelegatorReward",
-          value: {
-            sender: wallet,
-            denoms_to_claim: [
-              {
-                denom: "hard",
-                multiplier_name: "large",
-              },
-              {
-                denom: "swp",
-                multiplier_name: "large",
-              },
-            ],
-          },
-        },
-      ],
-      fee
-    );
-
-    l(`${wallet} claimed`);
-  }
-
-  async function delegate(wallet, kava) {
-    const operatorAddress =
-      "kavavaloper17u9s2fx5htqdsuk78hkfskw9s5g06tzqyl2m8j";
-
-    await client.sendTx(
-      [
-        {
-          type: "cosmos-sdk/MsgDelegate",
-          value: {
-            delegator_address: wallet,
-            validator_address: operatorAddress,
-            amount: {
-              denom: "ukava",
-              amount: `${1e6 * kava}`,
-            },
-          },
-        },
-      ],
-      fee
-    );
-
-    l(`${wallet} delegated ${kava}`);
-  }
-
-  await claim(wallet);
-  await delay(16000);
-  delegate(wallet, kava);
-}
-
 const fee = {
   gas: "1000000",
   amount: [
@@ -107,7 +22,7 @@ const fee = {
   ],
 };
 
-async function claim(client, delegator) {
+async function claim(client, delegator, rewards) {
   await client.sendTx(
     [
       {
@@ -146,7 +61,7 @@ async function claim(client, delegator) {
     fee
   );
 
-  l(`${delegator} claimed`);
+  l(`${delegator} claimed ${rewards}`);
 }
 
 async function delegate(client, delegator, validator, quantity) {
@@ -170,17 +85,56 @@ async function delegate(client, delegator, validator, quantity) {
   l(`${delegator} delegated ${quantity}`);
 }
 
-async function kavaWorker(mnemonics, config, quantity = 0.5, delayInS = 12) {
+async function getAmount(
+  client,
+  claimOption,
+  minValue = 10000,
+  fixValue = 10000
+) {
+  const fee = 1000;
+
+  const { address } = client.wallet;
+
+  /*
+  const res1 = await client.getDistributionRewards(address);
+  let stakingRewars = Math.floor(+res1.total[0].amount);
+  */
+
+  const res2 = await client.getBalances(address);
+  let walletBalance = +res2.filter(({ denom }) => denom == "ukava")[0].amount;
+
+  const res3 = await client.getRewards({
+    owner: address,
+    type: "kava",
+  });
+  let lendingRewards = +res3.hard_claims[0].base_claim.reward.filter(
+    ({ denom }) => denom == "ukava"
+  )[0].amount;
+
+  const amount =
+    {
+      0: lendingRewards - 2 * fee,
+      1: lendingRewards + walletBalance - 2 * fee - minValue,
+      2: fixValue,
+    }[claimOption] / 1e6;
+
+  lendingRewards /= 1e6;
+
+  return { amount, lendingRewards };
+}
+
+async function kavaWorker(mnemonics, config, delayInS = 16) {
   const configList = config.wallets;
 
   async function claimAndDelegate(i) {
     const seed = mnemonics[i];
     const { delegator, validator, claimOption, coin } = configList[i];
     const client = await initClient(seed);
+    const { amount, lendingRewards } = await getAmount(client, claimOption);
 
-    await claim(client, delegator);
+    await claim(client, delegator, lendingRewards);
     await delay(1e3 * delayInS);
-    delegate(client, delegator, validator, quantity);
+    delegate(client, delegator, validator, amount);
   }
 
   [...Array(mnemonics.length)].map((_, i) => i).forEach(claimAndDelegate);
@@ -246,9 +200,4 @@ async function uniDelegate(mnemonics, delegator, quantity, coin) {
   }
 }
 
-export { kavaStaff, initClient, kavaWorker, uniDelegate };
-
-/*
-  let ukavaAmount = +(await client.getBalances(wallet))[2].amount;
-  const delegateAmount = ukavaAmount >= 501000 ? 500000 : 400000;
-  */
+export { initClient, kavaWorker, uniDelegate };

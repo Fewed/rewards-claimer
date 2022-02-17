@@ -11,35 +11,14 @@ import { initClient } from "./kava-middleware.js";
 
 const configFilePath = "./config.json";
 const seedsFilePath = "./seeds.txt";
-const mnemoFilePath = "./settings.txt";
 const yesNoString = "y/n";
 
 async function getPassword() {
-  l("enter password");
   const { password } = await prompt.get({
     name: "password",
     hidden: true,
   });
   return password;
-}
-
-async function writeMnemonics(password) {
-  let isMnemonicAdding = await askForMnemoAdding();
-
-  while (isMnemonicAdding) {
-    let { mnemonic } = await prompt.get(["mnemonic"]);
-
-    let mnemonics = "";
-    if (await accessAsync(mnemoFilePath)) {
-      mnemonics = await readFileAsync(mnemoFilePath, {
-        encoding: "utf8",
-      });
-    }
-    mnemonics += enc(mnemonic, password) + "\n";
-    await writeFileAsync(mnemoFilePath, mnemonics);
-
-    isMnemonicAdding = await askForMnemoAdding();
-  }
 }
 
 // write seed and change config
@@ -86,7 +65,7 @@ async function seedsToConfig(seeds) {
   let config = { wallets: [] };
   const coin = "kava";
   const validator = "kavavaloper17u9s2fx5htqdsuk78hkfskw9s5g06tzqyl2m8j";
-  const claimOption = 0;
+  const claimOption = 1;
 
   for (let seed of seeds) {
     const delegator = (await initClient(seed)).wallet.address;
@@ -103,7 +82,7 @@ async function askForMnemoAdding() {
 }
 
 async function readMnemonics(password) {
-  let text = await readFileAsync(mnemoFilePath, {
+  let text = await readFileAsync(seedsFilePath, {
     encoding: "utf8",
   });
 
@@ -131,7 +110,6 @@ async function loadConfig() {
 
 export {
   getPassword,
-  writeMnemonics,
   readMnemonics,
   updateSeedsAndConfig,
   seedsToConfig,
