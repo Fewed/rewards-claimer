@@ -1,5 +1,4 @@
-import { l } from "./utils.js";
-import { getPassword, updateSeedsAndConfig } from "./prompt-middleware.js";
+import { getPassword, updateSeedsAndConfig } from "./middleware/prompt.js";
 
 async function main() {
   const password = await getPassword();

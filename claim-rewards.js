@@ -1,13 +1,12 @@
-import { l } from "./utils.js";
-import { getPassword, readMnemonics, loadConfig } from "./prompt-middleware.js";
-import { kavaWorker } from "./kava-middleware.js";
+import { getPassword, readSeeds, loadConfig } from "./middleware/prompt.js";
+import { kavaWorker } from "./middleware/kava.js";
 
 async function main() {
   const password = await getPassword();
-  const mnemonics = await readMnemonics(password);
+  const seeds = await readSeeds(password);
   const config = await loadConfig();
 
-  kavaWorker(mnemonics, config);
+  kavaWorker(seeds, config);
 }
 
 main();

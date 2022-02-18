@@ -5,12 +5,13 @@ import {
   readFileAsync,
   writeFileAsync,
   accessAsync,
-} from "./utils.js";
+} from "../utils/basics.js";
 import prompt from "prompt";
-import { initClient } from "./kava-middleware.js";
+import { initClient } from "./kava.js";
 
-const configFilePath = "./config.json";
-const seedsFilePath = "./seeds.txt";
+const walletFilePath = "./config/wallet.json";
+const configFilePath = "./config/config.json";
+const seedsFilePath = "./config/seeds.txt";
 const yesNoString = "y/n";
 
 async function getPassword() {
@@ -30,7 +31,7 @@ async function updateSeedsAndConfig(password) {
     let {
       seed = "",
       validator = "",
-      claimOption = 0,
+      claimOption = "",
     } = await prompt.get(["seed", "validator", "claimOption"]);
 
     // update seeds file
@@ -63,9 +64,7 @@ async function updateSeedsAndConfig(password) {
 
 async function seedsToConfig(seeds) {
   let config = { wallets: [] };
-  const coin = "kava";
-  const validator = "kavavaloper17u9s2fx5htqdsuk78hkfskw9s5g06tzqyl2m8j";
-  const claimOption = 1;
+  const { coin, validator, claimOption } = await loadConfig(walletFilePath);
 
   for (let seed of seeds) {
     const delegator = (await initClient(seed)).wallet.address;
@@ -76,32 +75,32 @@ async function seedsToConfig(seeds) {
 }
 
 async function askForMnemoAdding() {
-  l("add mnemonic?");
+  l("do you want to add record?");
   const res = await prompt.get([yesNoString]);
   return res[yesNoString] == "y";
 }
 
-async function readMnemonics(password) {
+async function readSeeds(password) {
   let text = await readFileAsync(seedsFilePath, {
     encoding: "utf8",
   });
 
-  let mnemonics = [];
+  let seeds = [];
 
   try {
-    mnemonics = text
+    seeds = text
       .trim()
       .split("\n")
       .map((item) => dec(item, password));
   } catch (error) {
-    l("wrong password");
+    l("wrong password!");
   }
 
-  return mnemonics;
+  return seeds;
 }
 
-async function loadConfig() {
-  const text = await readFileAsync(configFilePath, {
+async function loadConfig(path = configFilePath) {
+  const text = await readFileAsync(path, {
     encoding: "utf8",
   });
 
@@ -110,7 +109,7 @@ async function loadConfig() {
 
 export {
   getPassword,
-  readMnemonics,
+  readSeeds,
   updateSeedsAndConfig,
   seedsToConfig,
   loadConfig,
