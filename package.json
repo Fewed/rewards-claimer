@@ -1,6 +1,6 @@
 {
   "name": "rewards-claimer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "script.js",
   "scripts": {
@@ -12,7 +12,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@cosmos-client/core": "^0.44.4",
+    "@cosmostation/cosmosjs": "^0.11.1",
     "@kava-labs/javascript-sdk": "^9.0.1",
+    "@terra-money/terra.js": "^3.0.7",
+    "axios": "^0.26.0",
     "prompt": "^1.2.1",
     "simple-crypto-js": "^3.0.1",
     "util": "^0.12.4"

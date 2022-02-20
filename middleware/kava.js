@@ -1,7 +1,7 @@
 import { l, delay } from "../utils/basics.js";
 import { KavaClient } from "@kava-labs/javascript-sdk";
 
-const baseFee = 0.001;
+const baseFee = 0.00025;
 
 let claimCnt = 0;
 let delegCnt = 0;
@@ -103,8 +103,15 @@ async function getAmount(client, claimOption) {
 
   const { address } = client.wallet;
 
+  const res1 = await client.getAccount(address);
+  const { original_vesting, delegated_vesting } =
+    res1.value.base_vesting_account;
+  const vestDelta = getNum(original_vesting) - getNum(delegated_vesting);
+
   const res2 = await client.getBalances(address);
-  let walletBalance = getNum(res2);
+  const walletBalance = getNum(res2);
+
+  const availableBalance = walletBalance - vestDelta;
 
   const res3 = await client.getRewards({
     owner: address,
@@ -119,7 +126,7 @@ async function getAmount(client, claimOption) {
 
   let amount = {
     r: lendingRewards - 2 * baseFeeM,
-    m: lendingRewards + walletBalance - 2 * baseFeeM - claimOptionPostfix,
+    m: lendingRewards + availableBalance - 2 * baseFeeM - claimOptionPostfix,
     f: claimOptionPostfix,
   }[claimOptionPrefix];
 
