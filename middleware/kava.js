@@ -126,7 +126,7 @@ async function getAmount(client, claimOption) {
 
   let amount = {
     r: lendingRewards - 2 * baseFeeM,
-    m: lendingRewards + availableBalance - 2 * baseFeeM - claimOptionPostfix,
+    m: vestDelta + availableBalance - 2 * baseFeeM - claimOptionPostfix,
     f: claimOptionPostfix,
   }[claimOptionPrefix];
 
@@ -146,18 +146,21 @@ async function kavaWorker(seeds, config, delayInS = 16) {
     const seed = seeds[i];
     const { delegator, validator, claimOption } = configList[i];
     const client = await initClient(seed);
-    const { amount, lendingRewards } = await getAmount(client, claimOption);
+    const { lendingRewards } = await getAmount(client, claimOption);
     const addressH = hideAddress(client.wallet.address);
 
     if (lendingRewards !== 0)
       await claim(client, delegator, lendingRewards, seeds.length);
     else l(`${addressH} not enough rewards for claiming!`);
 
+    await delay(1e3 * delayInS);
+
+    ({ amount } = await getAmount(client, claimOption));
     if (amount === 0) {
       l(`${addressH} not enough balance for delegation!`);
       return;
     }
-    await delay(1e3 * delayInS);
+
     delegate(client, delegator, validator, amount, seeds.length);
   }
 

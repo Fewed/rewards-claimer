@@ -6,7 +6,9 @@
   "scripts": {
     "claim": "node claim-rewards.js",
     "add": "node save-seed.js",
-    "gen": "node ./utils/config-generator.js"
+    "gen": "node ./utils/config-generator.js",
+    "log": "git log --pretty=\"- %s\" > CHANGELOG.md",
+    "cosmjs": "node --es-module-specifier-resolution=node middleware/cosmos.js"
   },
   "keywords": [],
   "author": "",
